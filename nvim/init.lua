@@ -209,6 +209,22 @@ require('lazy').setup({
         component_separators = '|',
         section_separators = '',
       },
+      sections = {
+        lualine_c = {
+          {
+            'filename',
+            path = 1,            -- Muestra la ruta relativa (evitar usar 'path = 2' ya que muestra la ruta absoluta)
+          },
+        },
+      },
+      inactive_sections = {
+        lualine_a = {},
+        lualine_b = {},
+        lualine_c = {'filename'},
+        lualine_x = {'location'},
+        lualine_y = {},
+        lualine_z = {}
+      },
     },
   },
 
@@ -252,7 +268,7 @@ require('lazy').setup({
       'nvim-treesitter/nvim-treesitter-textobjects',
     },
     build = ':TSUpdate',
-    
+
     -- nerdtree
     'preservim/nerdtree'
 
@@ -673,10 +689,10 @@ cmp.setup {
 -- configuracion para que los archivos con extension vue tengan unde 
 -- indentacion unificada
 vim.api.nvim_create_autocmd("FileType", {
-    pattern = "vue",
-    callback = function()
-        vim.bo.tabstop = 2
-        vim.bo.shiftwidth = 2
-        vim.bo.expandtab = true
-    end,
+  pattern = "vue",
+  callback = function()
+    vim.bo.tabstop = 2
+    vim.bo.shiftwidth = 2
+    vim.bo.expandtab = true
+  end,
 })
