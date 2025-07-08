@@ -449,12 +449,18 @@ vim.keymap.set('n', '<leader>sr', require('telescope.builtin').resume, { desc = 
 vim.defer_fn(function()
   require('nvim-treesitter.configs').setup {
     -- Add languages to be installed here that you want installed for treesitter
+
+    --ensure_installed = {},
+    --highlight = { enable = false },
+    --indent = { enable = false },
+    --incremental_selection = { enable = false },
+
     ensure_installed = { 'c', 'cpp', 'go', 'lua', 'python', 'rust', 'tsx', 'javascript', 'typescript', 'vimdoc', 'vim', 'bash' },
 
     -- Autoinstall languages that are not installed. Defaults to false (but you can change for yourself!)
     auto_install = false,
 
-    highlight = { enable = true },
+    highlight = { enable = true, disable = {"c"}},
     indent = { enable = true },
     incremental_selection = {
       enable = true,
@@ -557,28 +563,46 @@ local on_attach = function(_, bufnr)
   end, { desc = 'Format current buffer with LSP' })
 end
 
+local wk = require("which-key")
+
+wk.add({
+  { "<leader>c", group = "[C]ode", hidden = true },
+  { "<leader>d", group = "[D]ocument", hidden = true },
+  { "<leader>g", group = "[G]it", hidden = true },
+  { "<leader>h", group = "Git [H]unk", hidden = true },
+  { "<leader>r", group = "[R]ename", hidden = true },
+  { "<leader>s", group = "[S]earch", hidden = true },
+  { "<leader>t", group = "[T]oggle", hidden = true },
+  { "<leader>w", group = "[W]orkspace", hidden = true },
+  { "<leader>h", desc = "Git [H]unk", mode = "v" },
+  { "", group = "VISUAL <leader>", mode = "v" },
+
+})
+
 -- document existing key chains
-require('which-key').register {
-  ['<leader>c'] = { name = '[C]ode', _ = 'which_key_ignore' },
-  ['<leader>d'] = { name = '[D]ocument', _ = 'which_key_ignore' },
-  ['<leader>g'] = { name = '[G]it', _ = 'which_key_ignore' },
-  ['<leader>h'] = { name = 'Git [H]unk', _ = 'which_key_ignore' },
-  ['<leader>r'] = { name = '[R]ename', _ = 'which_key_ignore' },
-  ['<leader>s'] = { name = '[S]earch', _ = 'which_key_ignore' },
-  ['<leader>t'] = { name = '[T]oggle', _ = 'which_key_ignore' },
-  ['<leader>w'] = { name = '[W]orkspace', _ = 'which_key_ignore' },
-}
--- register which-key VISUAL mode
--- required for visual <leader>hs (hunk stage) to work
-require('which-key').register({
-  ['<leader>'] = { name = 'VISUAL <leader>' },
-  ['<leader>h'] = { 'Git [H]unk' },
-}, { mode = 'v' })
+--require('which-key').register {
+--
+--  { "<leader>c", group = "[C]ode" },
+--  -- ['<leader>c'] = { name = '[C]ode', _ = 'which_key_ignore' },
+--  ['<leader>d'] = { name = '[D]ocument', _ = 'which_key_ignore' },
+--  ['<leader>g'] = { name = '[G]it', _ = 'which_key_ignore' },
+--  ['<leader>h'] = { name = 'Git [H]unk', _ = 'which_key_ignore' },
+--  ['<leader>r'] = { name = '[R]ename', _ = 'which_key_ignore' },
+--  ['<leader>s'] = { name = '[S]earch', _ = 'which_key_ignore' },
+--  ['<leader>t'] = { name = '[T]oggle', _ = 'which_key_ignore' },
+--  ['<leader>w'] = { name = '[W]orkspace', _ = 'which_key_ignore' },
+--}
+---- register which-key VISUAL mode
+---- required for visual <leader>hs (hunk stage) to work
+--require('which-key').register({
+--  ['<leader>'] = { name = 'VISUAL <leader>' },
+--  ['<leader>h'] = { 'Git [H]unk' },
+--}, { mode = 'v' })
 
 -- mason-lspconfig requires that these setup functions are called in this order
 -- before setting up the servers.
 require('mason').setup()
-require('mason-lspconfig').setup()
+-- require('mason-lspconfig').setup()
 
 -- Enable the following language servers
 --  Feel free to add/remove any LSPs that you want here. They will automatically be installed.
@@ -620,16 +644,28 @@ mason_lspconfig.setup {
   ensure_installed = vim.tbl_keys(servers),
 }
 
-mason_lspconfig.setup_handlers {
-  function(server_name)
-    require('lspconfig')[server_name].setup {
-      capabilities = capabilities,
-      on_attach = on_attach,
-      settings = servers[server_name],
-      filetypes = (servers[server_name] or {}).filetypes,
-    }
-  end,
-}
+local lspconfig = require 'lspconfig'
+
+for _, server_name in ipairs(mason_lspconfig.get_installed_servers()) do
+  lspconfig[server_name].setup {
+    capabilities = capabilities,
+    on_attach = on_attach,
+    settings = servers[server_name],
+    filetypes = (servers[server_name] or {}).filetypes,
+  }
+end
+
+
+-- mason_lspconfig.setup_handlers {
+--   function(server_name)
+--     require('lspconfig')[server_name].setup {
+--       capabilities = capabilities,
+--       on_attach = on_attach,
+--       settings = servers[server_name],
+--       filetypes = (servers[server_name] or {}).filetypes,
+--     }
+--   end,
+-- }
 
 -- [[ Configure nvim-cmp ]]
 -- See `:help cmp`
@@ -696,3 +732,11 @@ vim.api.nvim_create_autocmd("FileType", {
     vim.bo.expandtab = true
   end,
 })
+
+
+local ns = vim.api.nvim_create_namespace("disable_treesitter_decoration")
+vim.api.nvim_set_decoration_provider(ns, {
+  on_win = function() return false end,
+  on_line = function() return false end,
+})
+
